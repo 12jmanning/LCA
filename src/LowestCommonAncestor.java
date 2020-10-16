@@ -98,6 +98,8 @@ public class LowestCommonAncestor
         System.out.println("LCA(4, 6): " + tree.findLCA(4,6));
         System.out.println("LCA(3, 4): " + tree.findLCA(3,4));
         System.out.println("LCA(2, 4): " + tree.findLCA(2,4));
+        System.out.println("LCA(5, 6): " + tree.findLCA(5,6));
+
 
     }
 }
