@@ -21,14 +21,14 @@ import java.util.*;
  *
  */
 
-public class LowestCommonAncestor {
+public class DAG {
 
     private final int V;
     private final ArrayList<Integer>[] adj;
     private final ArrayList<Integer>[] reverseAdj;			//Need for finding the LCA
 
     //DAG constructor
-    public LowestCommonAncestor(int V)
+    public DAG(int V)
     {
         this.V = V;
         adj = (ArrayList<Integer>[]) new ArrayList[V];
@@ -189,7 +189,7 @@ public class LowestCommonAncestor {
         private boolean[] marked;
         private boolean[] revMarked;
 
-        public DirectedDFS(LowestCommonAncestor G, int s)
+        public DirectedDFS(DAG G, int s)
         {
             marked = new boolean[G.V()];
             revMarked = new boolean[G.V()];
@@ -198,7 +198,7 @@ public class LowestCommonAncestor {
 
 
         //standard depth first search - in the flow of direction.
-        private void dfs(LowestCommonAncestor G, int v)
+        private void dfs(DAG G, int v)
         {
             marked[v] = true;
             for (int w : G.adj(v))
@@ -207,7 +207,7 @@ public class LowestCommonAncestor {
 
 
         //depth first search against the flow of direction - used to find all parents.
-        private void reverseDfs(LowestCommonAncestor G, int v)
+        private void reverseDfs(DAG G, int v)
         {
             revMarked[v] = true;
             for (int w : G.reverseAdj(v))
@@ -220,7 +220,4 @@ public class LowestCommonAncestor {
         public boolean revVisited(int v)
         { return revMarked[v]; }
     }
-
-    public static void main(String[] args)
-    {}
 }
