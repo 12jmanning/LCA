@@ -1,110 +1,226 @@
-// Java Program for Lowest Common Ancestor in a Binary Tree
-// A O(n) solution to find LCA of two given values n1 and n2
-// This code is contributed by Sreenivasulu Rayanki.
-// found from https://www.geeksforgeeks.org/lowest-common-ancestor-binary-tree-set-1/?ref=lbp
-// Testing repo
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+/*
+ * public class Directed Acyclic Graph (DAG)
+ * A graph in which node edges are directed and cannot form cycles, so you cannot
+ * get back to a node by traversing it's edges.
+ *
+ * FUNCTIONS:
+ *
+ * Digraph(int V): create an empty digraph with V vertices
+ *
+ * void addEdge(int v, int w) : Add a directed edge v->w
+ *
+ * Iterable<Integer> adj(int v) : Return vertices pointing from v
+ *
+ * int V() : number of vertices
+ *
+ * boolean hasPth : if path exists between two nodes returns true
+ *
+ * String toString() : string representation of the graph
+ *
+ */
 
-// A Binary Tree node
-class Node {
-    int data;
-    Node left, right;
+public class LowestCommonAncestor {
 
-    Node(int value) {
-        data = value;
-        left = right = null;
-    }
-}
+    private final int V;
+    private final ArrayList<Integer>[] adj;
+    private final ArrayList<Integer>[] reverseAdj;			//Need for finding the LCA
 
-public class LowestCommonAncestor
-{
-
-    Node root;
-    private List<Integer> path1 = new ArrayList<>();
-    private List<Integer> path2 = new ArrayList<>();
-
-
-
-    // Finds the path from root node to given root of the tree.
-    int findLCA(int n1, int n2) {
-        path1.clear();
-        path2.clear();
-        return findLCAInternal(root, n1, n2);
-    }
-
-    private int findLCAInternal(Node root, int n1, int n2) {
-
-        if (!findPath(root, n1, path1) || !findPath(root, n2, path2)) {
-            System.out.println((path1.size() > 0) ? "n1 is present" : "n1 is missing");
-            System.out.println((path2.size() > 0) ? "n2 is present" : "n2 is missing");
-            return -1;
-        }
-
-        int i;
-        for (i = 0; i < path1.size() && i < path2.size(); i++) {
-
-            // System.out.println(path1.get(i) + " " + path2.get(i));
-            if (!path1.get(i).equals(path2.get(i)))
-                break;
-        }
-
-        return path1.get(i-1);
-    }
-
-    // Finds the path from root node to given root of the tree, Stores the
-    // path in a vector path[], returns true if path exists otherwise false
-    private boolean findPath(Node root, int n, List<Integer> path)
+    //DAG constructor
+    public LowestCommonAncestor(int V)
     {
-        // base case
-        if (root == null) {
+        this.V = V;
+        adj = (ArrayList<Integer>[]) new ArrayList[V];
+
+        // For LCA
+        reverseAdj = (ArrayList<Integer>[]) new ArrayList[V];
+
+        //Make an array list for each vertex
+        for (int v = 0; v < V; v++)
+        {
+            adj[v] = new ArrayList<Integer>();
+
+            //For LCA
+            reverseAdj[v] = new ArrayList<Integer>();
+        }
+    }
+
+    //Adds an edge from vertex v to vertex w if conditions met, returns true if edge was successfully added
+    public boolean addEdge(int v, int w)
+    {
+        // acyclic -> Will not create a cycle by adding the edge
+        // 1. No self loops
+        // 2. !hasPath w -> v i.e. can't get back to v after following the path from v to w
+
+        //Make sure vertexes are both in range (not less than 0 or bigger than number of vertexes in the DAG)
+        if(v >= this.V || w >= this.V || v < 0 || w < 0)
+        {
             return false;
         }
 
-        // Store this node . The node will be removed if
-        // not in path from root to n.
-        path.add(root.data);
-
-        if (root.data == n) {
+        //Make sure vertexes are different so no self loops
+        //Make sure no path exits between w and v (can't get back to v from following path after following path v to w)
+        //Make sure v does not already have an edge already pointing to w
+        if(v != w && !hasPath(w, v) && !adj[v].contains(w))
+        {
+            adj[v].add(w);
+            reverseAdj[w].add(v);
             return true;
         }
-
-        if (root.left != null && findPath(root.left, n, path)) {
-            return true;
+        else
+        {
+            return false;
         }
-
-        if (root.right != null && findPath(root.right, n, path)) {
-            return true;
-        }
-
-        // If not present in subtree rooted with root, remove root from
-        // path[] and return false
-        path.remove(path.size()-1);
-
-        return false;
     }
 
-    // Driver code
-    public static void main(String[] args)
+    //Returns number of vertexes in the DAG
+    public int V()
     {
-        LowestCommonAncestor tree = new LowestCommonAncestor();
-        tree.root = new Node(1);
-        tree.root.left = new Node(2);
-        tree.root.right = new Node(3);
-        tree.root.left.left = new Node(4);
-        tree.root.left.right = new Node(5);
-        tree.root.right.left = new Node(6);
-        tree.root.right.right = new Node(7);
-
-        System.out.println("LCA(4, 5): " + tree.findLCA(4,5));
-        System.out.println("LCA(4, 6): " + tree.findLCA(4,6));
-        System.out.println("LCA(3, 4): " + tree.findLCA(3,4));
-        System.out.println("LCA(2, 4): " + tree.findLCA(2,4));
-        System.out.println("LCA(5, 6): " + tree.findLCA(5,6));
-
-
+        return V;
     }
 
-    //Testing my branches
+    //Returns list of vertices pointing from the vertex v
+    public ArrayList<Integer> adj(int v)
+    {
+        return adj[v];
+    }
+
+    //Returns reversed list of vertices pointing from the vertex v
+    public ArrayList<Integer> reverseAdj(int v)
+    {
+        return reverseAdj[v];
+    }
+
+    //Checks if a path exists between to nodes by using depth first search
+    public boolean hasPath(int x, int y)
+    {
+        DirectedDFS dfsObject = new DirectedDFS(this, x);
+        return dfsObject.visited(y);
+    }
+
+    //lowestCommonAncestor code
+    public ArrayList<Integer> lowestCommonAncestor(int x, int y)
+    {
+        //STEPS TO FIND LCA(s):
+        //Mark all X's parents
+        //For each of X's parents, check if Y is child
+        //if it is
+        // 	get distance to X
+        // 	get distance to Y
+        //
+        // if max(xDist, yDist) < currentMaxDist
+        // 		empty bag and put in this node
+        //
+        // if max(xDist, yDist) == currentMaxDist
+        //		add this node to bag
+        //
+
+        ArrayList<Integer> lcas = new ArrayList<Integer>();
+        int currentMaxDist = Integer.MAX_VALUE;
+
+
+        if(x==y || x>=this.V || y>=this.V || x<0 || y<0) { return lcas; } //If invalid input return empty bag.
+
+        DirectedDFS dfsObject = new DirectedDFS(this, x);
+        dfsObject.reverseDfs(this, x);
+        int xDist, yDist;
+
+        for(int v = 0; v < this.V; v++)
+        {
+
+            if(dfsObject.revVisited(v) && hasPath(v, y))
+            {
+                xDist = getDistance(v, x);
+                yDist = getDistance(v, y);
+
+                if(Integer.max(xDist, yDist) < currentMaxDist)
+                {
+                    lcas = new ArrayList<Integer>();
+                    lcas.add(v);
+                    currentMaxDist = Integer.max(xDist, yDist);
+                }
+                else if(Integer.max(xDist, yDist) == currentMaxDist)
+                {
+                    lcas.add(v);
+                    currentMaxDist = Integer.max(xDist, yDist);
+                }
+            }
+        }
+        return lcas;
+    }
+
+    private int getDistance(int x, int target)
+    {
+
+        if( x == target) { return 0; }
+        else {
+            Queue<Integer> q = new LinkedList<Integer>();
+            int[] distTo = new int[this.V];
+            boolean[] marked = new boolean[this.V];
+
+            for (int v = 0; v < this.V(); v++)
+            {   distTo[v] = Integer.MAX_VALUE;}
+
+            distTo[x] = 0;
+            marked[x] = true;
+            q.add(x);
+
+            while (!q.isEmpty()) {
+                int v = q.remove();
+                for (int w : this.adj(v)) {
+                    if (!marked[w]) {
+
+                        distTo[w] = distTo[v] + 1;
+                        marked[w] = true;
+
+                        q.add(w);
+                    }
+                }
+            }
+
+            return distTo[target];
+        }
+    }
+
+    // Class to create a depth first search object on the directed graph
+    private class DirectedDFS
+    {
+        private boolean[] marked;
+        private boolean[] revMarked;
+
+        public DirectedDFS(LowestCommonAncestor G, int s)
+        {
+            marked = new boolean[G.V()];
+            revMarked = new boolean[G.V()];
+            dfs(G, s);
+        }
+
+
+        //standard depth first search - in the flow of direction.
+        private void dfs(LowestCommonAncestor G, int v)
+        {
+            marked[v] = true;
+            for (int w : G.adj(v))
+                if (!marked[w]) dfs(G, w);
+        }
+
+
+        //depth first search against the flow of direction - used to find all parents.
+        private void reverseDfs(LowestCommonAncestor G, int v)
+        {
+            revMarked[v] = true;
+            for (int w : G.reverseAdj(v))
+                if (!revMarked[w]) reverseDfs(G, w);
+        }
+
+        public boolean visited(int v)
+        { return marked[v]; }
+
+        public boolean revVisited(int v)
+        { return revMarked[v]; }
+    }
+
+    public static void main(String[] args)
+    {}
 }
